@@ -1,4 +1,4 @@
-import config from './config'
+import config, {CSE_ID, CSE_API_KEY} from './config'
 import express from 'express'
 import { MongoClient, ObjectID } from 'mongodb'
 import assert from 'assert'
@@ -13,16 +13,12 @@ MongoClient.connect(config.mongodbUri, (err, db) => {
     mdb = db
 })
 
-server.set('view engine', 'ejs')
 
-server.get('/', (req, res) => {
-    res.render('index')
-}) 
+server.use(express.static('views'))
 
-
-server.get('/:string', (req, res) => {
+server.get('/api/:string', (req, res) => {
   let temp = []
-  request(`https://content.googleapis.com/customsearch/v1?key=${config.CSE_API_KEY}&cx=${config.CSE_ID}&searchType=image&num=${req.query.offset}&q=${req.params.string}`,function (error, response, body){
+  request(`https://content.googleapis.com/customsearch/v1?key=${CSE_API_KEY}&cx=${CSE_ID}&searchType=image&num=${req.query.offset}&q=${req.params.string}`,function (error, response, body){
   body = JSON.parse(body) 
   body.items.map((item)=>{
     let json = {} 
@@ -45,7 +41,7 @@ server.get('/:string', (req, res) => {
   
 }) 
 
-server.get('/latest/imagesearch',(req,res)=>{
+server.get('/api/latest/imagesearch',(req,res)=>{
   mdb.collection('Images').find({}, {string: 1, createdDate: 1, _id: 0}).sort({createdDate:-1}).limit(10).toArray((err, result) =>{
     res.send(result)
   })
